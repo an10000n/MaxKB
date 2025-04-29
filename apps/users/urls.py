@@ -23,4 +23,8 @@ urlpatterns = [
     path("user_manage/<int:current_page>/<int:page_size>", views.UserManage.Page.as_view(),
          name="user_manage_re_password"),
     path('user/list/<str:type>', views.UserListView.as_view()),
+
+    path('user/3di', views.Tenant3DIUser.as_view()),
+    path('user/<str:user_id>/add_api_key/', views.UserApiKey.as_view()),
+    path('user/clear_user_api_key_cache', views.UserApiKey.ClearUserApiKeyCache.as_view()),
 ]

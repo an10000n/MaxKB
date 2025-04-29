@@ -10,6 +10,7 @@ from django.http import HttpResponse
 from django.utils.deprecation import MiddlewareMixin
 
 from common.cache_data.application_api_key_cache import get_application_api_key
+from common.cache_data.user_api_key_cache import get_user_api_key
 
 
 class CrossDomainMiddleware(MiddlewareMixin):
@@ -35,6 +36,18 @@ class CrossDomainMiddleware(MiddlewareMixin):
                     'Access-Control-Allow-Headers'] = "Origin,X-Requested-With,Content-Type,Accept,Authorization,token"
                 if cross_domain_list is None or len(cross_domain_list) == 0:
                     response['Access-Control-Allow-Origin'] = "*"
+                elif cross_domain_list.__contains__(origin):
+                    response['Access-Control-Allow-Origin'] = origin
+        if auth is not None and str(auth).startswith("user-") and origin is not None:
+            user_api_key = get_user_api_key(str(auth), True)
+            cross_domain_list = user_api_key.get('cross_domain_list', [])
+            allow_cross_domain = user_api_key.get('allow_cross_domain', False)
+            if allow_cross_domain:
+                response['Access-Control-Allow-Methods'] = 'GET,POST,DELETE,PUT'
+                response[
+                    'Access-Control-Allow-Headers'] = "Origin,X-Requested-With,Content-Type,Accept,Authorization,token"
+                if cross_domain_list is None or len(cross_domain_list) == 0:
+                    response['Access-Control-Allow-Origin'] = origin #"*"
                 elif cross_domain_list.__contains__(origin):
                     response['Access-Control-Allow-Origin'] = origin
         return response

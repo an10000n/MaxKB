@@ -12,8 +12,11 @@ PUBLIC_ACCESS_TOKEN_AUTH = 'common.auth.handle.impl.public_access_token.PublicAc
 
 APPLICATION_KEY_AUTH = 'common.auth.handle.impl.application_key.ApplicationKey'
 
+USER_API_KEY_AUTH = 'common.auth.handle.impl.user_api_key_auth.UserApiKeyAuth'
+
 AUTH_HANDLES = [
     USER_TOKEN_AUTH,
     PUBLIC_ACCESS_TOKEN_AUTH,
-    APPLICATION_KEY_AUTH
+    APPLICATION_KEY_AUTH,
+    USER_API_KEY_AUTH
 ]

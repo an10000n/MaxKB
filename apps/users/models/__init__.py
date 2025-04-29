@@ -7,3 +7,4 @@
     @desc:
 """
 from .user import *
+from .user_api_key_model import *

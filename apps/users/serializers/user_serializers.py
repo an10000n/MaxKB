@@ -11,6 +11,7 @@ import os
 import random
 import re
 import uuid
+import hashlib
 
 from django.conf import settings
 from django.core import validators, signing, cache
@@ -39,6 +40,7 @@ from function_lib.models.function import FunctionLib
 from setting.models import Team, SystemSetting, SettingType, Model, TeamMember, TeamMemberPermission
 from smartdoc.conf import PROJECT_DIR
 from users.models.user import User, password_encrypt, get_user_dynamics_permission
+from users.models.user_api_key_model import UserApiKeyModel
 from django.utils.translation import gettext_lazy as _, gettext, to_locale
 from django.utils.translation import get_language
 user_cache = cache.caches['user_cache']
@@ -790,6 +792,39 @@ class UserManageSerializer(serializers.Serializer):
         # 初始化用户团队
         Team(**{'user': user, 'name': user.username + _('team')}).save()
         return UserInstanceSerializer(user).data
+
+    @transaction.atomic
+    def save_3di_user(self, instance, with_valid=False):
+        if with_valid:
+            UserManageSerializer.UserInstance(data=instance).is_valid(raise_exception=True)
+
+        user = User(id=uuid.uuid1(), email=instance.get('email'),
+                    phone="" if instance.get('phone') is None else instance.get('phone'),
+                    nick_name="" if instance.get('nick_name') is None else instance.get('nick_name')
+                    , username=instance.get('username'), password=password_encrypt(instance.get('password')),
+                    role=RoleConstants.USER.name, source="3DI",
+                    is_active=True)
+        user.save()
+        # 初始化用户团队
+        Team(**{'user': user, 'name': user.username + _('team')}).save()
+        # 默认加入到admin的团队中
+        admin_user = QuerySet(User).filter(role=RoleConstants.ADMIN.name).first()
+        TeamMember(**{'team': QuerySet(Team).filter(user=admin_user).first(), 'user': user}).save()
+        # 创建user_api_key
+        UserApiKeyModel(**{'user': user, 'secret_key': 'user-'+user.username, 'is_active': True, 'allow_cross_domain': True}).save()
+        return UserInstanceSerializer(user).data
+
+    def generate_user_api_key(self, user_id):
+            user = QuerySet(User).filter(id=user_id).first()
+            if user is None:
+                raise ExceptionCodeConstants.USER_NOT_EXIST.value.to_app_api_exception()
+            user_api_key = QuerySet(UserApiKeyModel).filter(user_id=user_id).first()
+            # 已经存在用户api_key 直接返回
+            if user_api_key is None:
+                secret_key = 'user-' + hashlib.md5(str(uuid.uuid1()).encode()).hexdigest()
+                user_api_key = UserApiKeyModel(**{'user': user, 'secret_key': secret_key, 'is_active': True, 'allow_cross_domain': True})
+                user_api_key.save()
+            return {"id": user_api_key.id, "secret_key": user_api_key.secret_key, "user_id": user_id}
 
     class Operate(serializers.Serializer):
         id = serializers.UUIDField(required=True, error_messages=ErrMessage.char("ID"))

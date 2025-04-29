@@ -7,3 +7,5 @@
     @desc:
 """
 from .user import *
+from .third_part_user import *
+from .user_api_key import *
