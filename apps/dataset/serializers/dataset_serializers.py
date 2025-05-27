@@ -22,7 +22,7 @@ from celery_once import AlreadyQueued
 from django.contrib.postgres.fields import ArrayField
 from django.core import validators
 from django.db import transaction, models
-from django.db.models import QuerySet
+from django.db.models import QuerySet, Q
 from django.db.models.functions import Reverse, Substr
 from django.http import HttpResponse
 from drf_yasg import openapi
@@ -193,6 +193,14 @@ class DataSetSerializers(serializers.ModelSerializer):
         def list(self):
             return native_search(self.get_query_set(), select_string=get_file_content(
                 os.path.join(PROJECT_DIR, "apps", "dataset", 'sql', 'list_dataset.sql')))
+
+        def queryDatasetFor3DI(self):
+            # 动态构建查询条件
+            query = Q(user_id=self.data.get("user_id"))
+            # 如果存在select_user_id则添加OR条件
+            if "select_user_id" in self.data and self.data.get('select_user_id') is not None:
+                query |= Q(user_id=self.data.get("select_user_id"))
+            return list(QuerySet(DataSet).filter(query).order_by("user_id", "-create_time").values())
 
         @staticmethod
         def get_request_params_api():

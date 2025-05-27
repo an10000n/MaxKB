@@ -10,3 +10,12 @@ DEBUG: false
 
 TIME_ZONE: Asia/Shanghai
 
+# 模型相关配置
+# 模型路径:如果EMBEDDING_MODEL_NAME是绝对路径则无效,反之则会从https://huggingface.co/下载模型到当前目录
+EMBEDDING_MODEL_PATH: /opt/maxkb/model/
+# 模型名称:如果模型名称是路径,则会加载目录下的模型,如果是模型名称,则会在https://huggingface.co/下载模型 模型的下载位置为EMBEDDING_MODEL_PATH
+EMBEDDING_MODEL_NAME: /opt/maxkb/model/shibing624_text2vec-base-chinese
+
+# GPT2模型配置
+GPT2_TOKENIZER_MODEL_PATH: /opt/maxkb/model/tokenizer
+GPT2_TOKENIZER_MODEL_NAME: /opt/maxkb/model/tokenizer/models--gpt2/snapshots/607a30d783dfa663caf39e06633721c8d4cfcd7e

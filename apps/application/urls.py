@@ -50,6 +50,8 @@ urlpatterns = [
     path('application/<str:application_id>/chat/export', views.ChatView.Export.as_view(), name='export'),
     path('application/<str:application_id>/chat/completions', views.Openai.as_view(),
          name='application/chat_completions'),
+    path('chat/<str:chat_id>/chat/completions', views.Openai.ChatTemp.as_view(),
+         name='application/chat_completions_without_application_id'),
     path('application/<str:application_id>/chat', views.ChatView.as_view(), name='chats'),
     path('application/<str:application_id>/chat/<int:current_page>/<int:page_size>', views.ChatView.Page.as_view()),
     path('application/<str:application_id>/chat/<chat_id>', views.ChatView.Operate.as_view()),

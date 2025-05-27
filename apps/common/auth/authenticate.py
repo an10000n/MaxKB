@@ -78,6 +78,7 @@ class TokenAuth(TokenAuthentication):
     # 重新 authenticate 方法，自定义认证规则
     def authenticate(self, request):
         auth = request.META.get('HTTP_AUTHORIZATION')
+        auth = auth.replace('Bearer ', '')
         # 未认证
         if auth is None:
             raise AppAuthenticationFailed(1003, _('Not logged in, please log in first'))

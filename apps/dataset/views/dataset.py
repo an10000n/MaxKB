@@ -31,6 +31,22 @@ from django.utils.translation import gettext_lazy as _
 class Dataset(APIView):
     authentication_classes = [TokenAuth]
 
+    class DatasetFor3DI(APIView):
+        authentication_classes = [TokenAuth]
+
+        @action(methods=['GET'], detail=False)
+        @swagger_auto_schema(operation_summary=_('Get a list of knowledge bases for 3DI'),
+                             operation_id=_('Get a list of knowledge bases for 3DI'),
+                             manual_parameters=get_page_request_params(DataSetSerializers.Query.get_request_params_api()),
+                             responses=get_page_api_response(DataSetSerializers.Query.get_response_body_api()),
+                             tags=[_('Knowledge Base')])
+        @has_permissions(PermissionConstants.DATASET_READ, compare=CompareConstants.AND)
+        def get(self, request: Request):
+            data = {key: str(value) for key, value in request.query_params.items()}
+            d = DataSetSerializers.Query(data={**data, 'user_id': str(request.user.id)})
+            d.is_valid()
+            return result.success(d.queryDatasetFor3DI())
+
     class SyncWeb(APIView):
         authentication_classes = [TokenAuth]
 

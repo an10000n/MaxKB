@@ -292,7 +292,7 @@ class ChatSerializers(serializers.Serializer):
             super().is_valid(raise_exception=True)
             user_id = self.data.get('user_id')
             application_id = self.data.get('application_id')
-            if not QuerySet(Application).filter(id=application_id, user_id=user_id).exists():
+            if not QuerySet(Application).filter(id=application_id).exists():
                 raise AppApiException(500, gettext('Application does not exist'))
 
         def open(self):
@@ -363,12 +363,16 @@ class ChatSerializers(serializers.Serializer):
 
         id = serializers.UUIDField(required=False, allow_null=True,
                                    error_messages=ErrMessage.uuid(_("Application ID")))
+        application_id = serializers.UUIDField(required=False, allow_null=True,
+                                   error_messages=ErrMessage.uuid(_("Application ID")))
         model_id = serializers.CharField(required=False, allow_null=True, allow_blank=True,
                                          error_messages=ErrMessage.uuid(_("Model id")))
 
         multiple_rounds_dialogue = serializers.BooleanField(required=True,
                                                             error_messages=ErrMessage.boolean(
                                                                 _("Multi-round conversation")))
+        dialogue_number = serializers.FloatField(required=False, max_value=100, min_value=0,
+                                   error_messages=ErrMessage.float(_("Dialogue number")))
 
         dataset_id_list = serializers.ListSerializer(required=False, child=serializers.UUIDField(required=True),
                                                      error_messages=ErrMessage.list(_("Related Datasets")))
@@ -386,38 +390,61 @@ class ChatSerializers(serializers.Serializer):
         def is_valid(self, *, raise_exception=False):
             super().is_valid(raise_exception=True)
             user_id = self.get_user_id()
-            ModelDatasetAssociation(
-                data={'user_id': user_id, 'model_id': self.data.get('model_id'),
-                      'dataset_id_list': self.data.get('dataset_id_list')}).is_valid()
+            # ModelDatasetAssociation(
+            #     data={'user_id': user_id, 'model_id': self.data.get('model_id'),
+            #           'dataset_id_list': self.data.get('dataset_id_list')}).is_valid()
             return user_id
 
         def get_user_id(self):
-            if 'id' in self.data and self.data.get('id') is not None:
-                application = QuerySet(Application).filter(id=self.data.get('id')).first()
-                if application is None:
-                    raise AppApiException(500, gettext("Application does not exist"))
-                return application.user_id
+            # if 'id' in self.data and self.data.get('id') is not None:
+            #     application = QuerySet(Application).filter(id=self.data.get('id')).first()
+            #     if application is None:
+            #         raise AppApiException(500, gettext("Application does not exist"))
+            #     return application.user_id
             return self.data.get('user_id')
 
-        def open(self):
+        def open(self, default_chat_id=None):
+            # 对话记录
+            chat_record_list = []
+            if default_chat_id is not None and default_chat_id != '':
+                chat_id = default_chat_id
+                chat_info: ChatInfo = chat_cache.get(chat_id)
+                if chat_info is not None:
+                    return chat_id
+                # 根据chat_id查询对话记录
+                chat_record_list = list(QuerySet(ChatRecord).filter(chat_id=chat_id).order_by('-create_time')[0:5])
+                if chat_record_list is not None and len(chat_record_list) > 0:
+                    chat_record_list.sort(key=lambda r: r.create_time)
+                else:
+                    chat_record_list = []
+            else:
+                chat_id = str(uuid.uuid1())
             user_id = self.is_valid(raise_exception=True)
-            chat_id = str(uuid.uuid1())
             model_id = self.data.get('model_id')
             dataset_id_list = self.data.get('dataset_id_list')
-            dialogue_number = 3 if self.data.get('multiple_rounds_dialogue', False) else 0
-            application = Application(id=None, dialogue_number=dialogue_number, model_id=model_id,
+            dialogue_number = 0
+            if self.data.get('multiple_rounds_dialogue', False):
+                dialogue_number = self.data.get('dialogue_number', 3)
+            application_id = self.data.get('application_id')
+            if application_id is None or application_id == '':
+                application_id = self.data.get('id')
+            if application_id is None or application_id == '':
+                application_id = '00000000-0000-0000-0000-000000000000'
+            application = Application(id=application_id, dialogue_number=dialogue_number, model_id=model_id,
                                       dataset_setting=self.data.get('dataset_setting'),
                                       model_setting=self.data.get('model_setting'),
                                       problem_optimization=self.data.get('problem_optimization'),
                                       model_params_setting=self.data.get('model_params_setting'),
                                       user_id=user_id)
-            chat_cache.set(chat_id,
-                           ChatInfo(chat_id, dataset_id_list,
+            chat_info = ChatInfo(chat_id, dataset_id_list,
                                     [str(document.id) for document in
                                      QuerySet(Document).filter(
                                          dataset_id__in=dataset_id_list,
                                          is_active=False)],
-                                    application), timeout=60 * 30)
+                                    application)
+            for chat_record in chat_record_list:
+                chat_info.chat_record_list.append(chat_record)
+            chat_cache.set(chat_id, chat_info, timeout=60 * 30)
             return chat_id
 
 

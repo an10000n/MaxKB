@@ -40,8 +40,24 @@ class Openai(APIView):
                          responses=OpenAIChatApi.get_response_body_api(),
                          tags=[_("OpenAI Dialogue")])
     def post(self, request: Request, application_id: str):
+        param = {**request.data, 'user_id': request.user.id}
         return OpenAIChatSerializer(data={'application_id': application_id, 'client_id': request.auth.client_id,
-                                          'client_type': request.auth.client_type}).chat(request.data)
+                                          'client_type': request.auth.client_type}).chat(param)
+
+    class ChatTemp(APIView):
+        authentication_classes = [OpenAIKeyAuth]
+
+        @action(methods=['POST'], detail=False)
+        @swagger_auto_schema(operation_summary=_("OpenAI Interface Dialogue"),
+                            operation_id=_("OpenAI Interface Dialogue"),
+                            request_body=OpenAIChatApi.get_request_body_api(),
+                            responses=OpenAIChatApi.get_response_body_api(),
+                            tags=[_("OpenAI Dialogue")])
+        def post(self, request: Request, chat_id: str):
+            param = {**request.data, 'user_id': request.user.id}
+            param["chat_id"] = ChatSerializers.OpenTempChat(data = param).open(chat_id)
+            return OpenAIChatSerializer(data={'application_id': param["application_id"] if "application_id" in param else '00000000-0000-0000-0000-000000000000', 'client_id': request.auth.client_id,
+                                            'client_type': request.auth.client_type}).chat(param)
 
 
 class ChatView(APIView):
