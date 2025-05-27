@@ -43,6 +43,8 @@ class BaseTextToSpeechNode(ITextToSpeechNode):
                 content, model_params_setting=None,
                 **kwargs) -> NodeResult:
         self.context['content'] = content
+        if tts_model_id.startswith('{{'):
+            tts_model_id = self.workflow_manage.generate_prompt(tts_model_id)
         model = get_model_instance_by_model_user_id(tts_model_id, self.flow_params_serializer.data.get('user_id'),
                                                     **model_params_setting)
         audio_byte = model.text_to_speech(content)

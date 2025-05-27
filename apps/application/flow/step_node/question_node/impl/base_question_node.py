@@ -85,6 +85,8 @@ class BaseQuestionNode(IQuestionNode):
     def execute(self, model_id, system, prompt, dialogue_number, history_chat_record, stream, chat_id, chat_record_id,
                 model_params_setting=None,
                 **kwargs) -> NodeResult:
+        if model_id.startswith('{{'):
+            model_id = self.workflow_manage.generate_prompt(model_id)
         if model_params_setting is None:
             model_params_setting = get_default_model_params_setting(model_id)
         chat_model = get_model_instance_by_model_user_id(model_id, self.flow_params_serializer.data.get('user_id'),

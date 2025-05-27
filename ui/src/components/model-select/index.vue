@@ -1,6 +1,26 @@
 <template>
   <div class="w-full">
-    <el-select v-model="modelValue" popper-class="select-model" :clearable="true" v-bind="$attrs">
+    <div class="flex-between" v-if="canParameter">
+      <span>编辑方式</span>
+      <el-select
+        :teleported="false"
+        @change="model_type_change"
+        v-model="model_type"
+        size="small"
+        style="width: 70%"
+      >
+        <el-option
+          label="模型库筛选"
+          value="choice"
+        />
+        <el-option
+          label="变量,如：{{全局变量.model_id}}"
+          value="param"
+        />
+      </el-select>
+    </div>
+    <el-input v-model="model_reference" v-if="model_type=='param'" />
+    <el-select v-model="modelValue" popper-class="select-model" :clearable="true" v-bind="$attrs" v-else>
       <el-option-group
         v-for="(value, label) in options"
         :key="value"
@@ -92,6 +112,7 @@ const props = defineProps<{
   options: any
   showFooter?: false
   modelType?: ''
+  canParameter: false // false: 只能从模型库选择，不能参数化添加
 }>()
 
 const emit = defineEmits(['update:modelValue', 'change', 'submitModel'])
@@ -101,7 +122,7 @@ const modelValue = computed({
     emit('update:modelValue', item)
   },
   get: () => {
-    return props.modelValue
+    return isUUID(props.modelValue) ? props.modelValue : ""
   }
 })
 const { model } = useStore()
@@ -110,6 +131,28 @@ const createModelRef = ref<InstanceType<typeof CreateModelDialog>>()
 const selectProviderRef = ref<InstanceType<typeof SelectProviderDialog>>()
 const providerOptions = ref<Array<Provider>>([])
 const loading = ref(false)
+
+const model_type = ref(props.canParameter && props.modelValue != "" && !isUUID(props.modelValue) ? 'param' : 'choice')
+const model_type_change = () => {
+  model_reference.value = ''
+  modelValue.value = ''
+  emit('change', "")
+  emit('update:modelValue', "")
+}
+const model_reference = computed({
+  set: (item) => {
+    emit('change', "")
+    emit('update:modelValue', item)
+  },
+  get: () => {
+    return isUUID(props.modelValue) ? "" : props.modelValue
+  }
+})
+
+function isUUID(str: string) {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  return uuidRegex.test(str)
+}
 
 function getProvider() {
   loading.value = true

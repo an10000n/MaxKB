@@ -158,6 +158,7 @@
             :options="modelOptions"
             @submitModel="getModel"
             showFooter
+            canParameter="true"
             :model-type="'RERANKER'"
           ></ModelSelect>
         </el-form-item>

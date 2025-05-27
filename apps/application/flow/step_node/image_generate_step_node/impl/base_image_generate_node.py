@@ -22,6 +22,8 @@ class BaseImageGenerateNode(IImageGenerateNode):
                 model_params_setting,
                 chat_record_id,
                 **kwargs) -> NodeResult:
+        if model_id.startswith('{{'):
+            model_id = self.workflow_manage.generate_prompt(model_id)
         print(model_params_setting)
         application = self.workflow_manage.work_flow_post_handler.chat_info.application
         tti_model = get_model_instance_by_model_user_id(model_id, self.flow_params_serializer.data.get('user_id'), **model_params_setting)

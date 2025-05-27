@@ -21,6 +21,8 @@ class BaseSpeechToTextNode(ISpeechToTextNode):
         self.answer_text = details.get('answer')
 
     def execute(self, stt_model_id, chat_id, audio, **kwargs) -> NodeResult:
+        if stt_model_id.startswith('{{'):
+            stt_model_id = self.workflow_manage.generate_prompt(stt_model_id)
         stt_model = get_model_instance_by_model_user_id(stt_model_id, self.flow_params_serializer.data.get('user_id'))
         audio_list = audio
         self.context['audio_list'] = audio

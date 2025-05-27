@@ -46,6 +46,7 @@
             :placeholder="$t('views.application.applicationForm.form.voicePlay.placeholder')"
             :options="modelOptions"
             showFooter
+            canParameter="true"
             :model-type="'TTS'"
           ></ModelSelect>
         </el-form-item>

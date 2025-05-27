@@ -197,7 +197,8 @@ class BaseChatNode(IChatNode):
                 **kwargs) -> NodeResult:
         if dialogue_type is None:
             dialogue_type = 'WORKFLOW'
-
+        if model_id.startswith('{{'):
+            model_id = self.workflow_manage.generate_prompt(model_id)
         if model_params_setting is None:
             model_params_setting = get_default_model_params_setting(model_id)
         if model_setting is None:

@@ -75,6 +75,8 @@ class BaseRerankerNode(IRerankerNode):
                 **kwargs) -> NodeResult:
         documents = merge_reranker_list(reranker_list)
         top_n = reranker_setting.get('top_n', 3)
+        if reranker_model_id.startswith('{{'):
+            reranker_model_id = self.workflow_manage.generate_prompt(reranker_model_id)
         self.context['document_list'] = [{'page_content': document.page_content, 'metadata': document.metadata} for
                                          document in documents]
         self.context['question'] = question

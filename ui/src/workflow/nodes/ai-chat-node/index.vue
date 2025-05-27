@@ -49,6 +49,7 @@
             :options="modelOptions"
             @submitModel="getModel"
             showFooter
+            canParameter="true"
             :model-type="'LLM'"
           ></ModelSelect>
         </el-form-item>

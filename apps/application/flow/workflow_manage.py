@@ -141,6 +141,10 @@ class Flow:
     def is_valid_model_params(self):
         node_list = [node for node in self.nodes if (node.type == 'ai-chat-node' or node.type == 'question-node')]
         for node in node_list:
+            model_id : str = node.properties.get('node_data', {}).get('model_id')
+            # 判断model_id 是否是{{开头，如果是，则代表从其他参数传入
+            if model_id is not None and model_id.startswith('{{'):
+                continue
             model = QuerySet(Model).filter(id=node.properties.get('node_data', {}).get('model_id')).first()
             if model is None:
                 raise ValidationError(ErrorDetail(

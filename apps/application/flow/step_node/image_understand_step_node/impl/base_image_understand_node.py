@@ -79,6 +79,8 @@ class BaseImageUnderstandNode(IImageUnderstandNode):
         # 处理不正确的参数
         if image is None or not isinstance(image, list):
             image = []
+        if model_id.startswith('{{'):
+            model_id = self.workflow_manage.generate_prompt(model_id)
         print(model_params_setting)
         image_model = get_model_instance_by_model_user_id(model_id, self.flow_params_serializer.data.get('user_id'), **model_params_setting)
         # 执行详情中的历史消息不需要图片内容

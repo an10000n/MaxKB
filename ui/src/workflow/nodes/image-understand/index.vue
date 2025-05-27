@@ -51,6 +51,7 @@
             "
             :options="modelOptions"
             showFooter
+            canParameter="true"
             :model-type="'IMAGE'"
           ></ModelSelect>
         </el-form-item>

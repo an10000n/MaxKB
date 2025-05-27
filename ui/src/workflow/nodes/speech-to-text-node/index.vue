@@ -37,6 +37,7 @@
             :placeholder="$t('views.application.applicationForm.form.voiceInput.placeholder')"
             :options="modelOptions"
             showFooter
+            canParameter="true"
             :model-type="'STT'"
           ></ModelSelect>
         </el-form-item>
